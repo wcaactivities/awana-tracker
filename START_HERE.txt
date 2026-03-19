@@ -1,0 +1,59 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║          AWANA SPARKS TRACKER - QUICK START GUIDE            ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🚀 TO START THE APPLICATION:
+
+   Windows Users:
+   → Double-click "Launch_Awana_Tracker.bat"
+   → OR double-click "index.html"
+
+   Mac/Linux Users:
+   → Double-click "Launch_Awana_Tracker.sh"
+   → OR double-click "index.html"
+
+   Chromebook Users:
+   → See "CHROMEBOOK_INSTALLATION.md" for full guide
+   → Recommended: Use GitHub Pages + Install as PWA
+   → Works perfectly on Chrome OS!
+
+   Android Tablet Users:
+   → See "ANDROID_INSTALLATION.md" for full guide
+   → Recommended: Install as Progressive Web App (PWA)
+   → Works offline and like a native app!
+
+
+📖 FOR DETAILED INSTRUCTIONS:
+   → Open "PACKAGE_README.md" for complete guide
+   → Open "INSTALLATION.md" for installation help
+   → Open "README.md" for application features
+
+
+💾 TO TRANSFER YOUR DATA:
+   1. In the app, go to Summary tab
+   2. Click "Export to Excel"
+   3. Save the file
+   4. Copy this folder to new computer
+   5. Open app on new computer
+   6. Click "Import from Excel"
+   7. Select your saved file
+
+
+✨ FIRST TIME SETUP:
+   1. Open the application
+   2. Go to "Admin" tab → Add clubber names
+   3. Go to "Config" tab → Add books, sections, and dates
+   4. Go to "Progress" tab → Start tracking!
+
+
+❓ NEED HELP?
+   → Check PACKAGE_README.md for troubleshooting
+   → All data is stored locally on your computer
+   → No internet required (except first time for Excel features)
+
+
+═══════════════════════════════════════════════════════════════
+
+Made with ❤️ for Awana Sparks Clubs

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Track Awana Sparks clubber progress, attendance, and coupons">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Awana Tracker">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Awana Sparks Tracker</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="./styles.css">
+    <!-- SheetJS library for Excel import/export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Awana Sparks Club Tracker</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" data-tab="summary">Summary</button>
+            <button class="tab-button" data-tab="progress">Progress</button>
+            <button class="tab-button" data-tab="coupons">Coupons</button>
+            <button class="tab-button" data-tab="admin">Admin</button>
+            <button class="tab-button" data-tab="config">Config</button>
+        </div>
+
+        <!-- Summary Tab -->
+        <div id="summary" class="tab-content active">
+            <h2>Summary</h2>
+            <div class="export-import-controls">
+                <button onclick="exportToExcel()">📥 Export to Excel</button>
+                <button onclick="document.getElementById('importFile').click()">📤 Import from Excel</button>
+                <button onclick="refreshSummary()">🔄 Refresh Summary</button>
+                <input type="file" id="importFile" accept=".xlsx,.xls" style="display: none;" onchange="importFromExcel(event)">
+            </div>
+            <div class="table-container">
+                <table id="summaryTable">
+                    <thead>
+                        <tr>
+                            <th>Clubber Name</th>
+                            <th>Attendance</th>
+                            <th>Total Coupons</th>
+                            <th>Current Book</th>
+                            <th>Current Section</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progress" class="tab-content">
+            <h2>Progress</h2>
+            <div class="progress-controls">
+                <label for="dateSelect">Select Date:</label>
+                <select id="dateSelect">
+                    <option value="">-- Select a Date --</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table id="progressTable">
+                    <thead>
+                        <tr>
+                            <th>Clubber Name</th>
+                            <th>Present</th>
+                            <th>Uniform</th>
+                            <th>Handbook</th>
+                            <th>Bible</th>
+                            <th>Coupons Earned</th>
+                            <th>Coupons Spent</th>
+                            <th>Book</th>
+                            <th>Section</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progressTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Coupons Tab -->
+        <div id="coupons" class="tab-content">
+            <h2>Coupons Tracking</h2>
+            <div class="table-container">
+                <table id="couponsTable">
+                    <thead>
+                        <tr>
+                            <th>Clubber Name</th>
+                            <th>Balance</th>
+                            <th><input type="date" id="couponDate1" onchange="updateCouponDateHeader(0, this.value)" placeholder="Date 1"></th>
+                            <th><input type="date" id="couponDate2" onchange="updateCouponDateHeader(1, this.value)" placeholder="Date 2"></th>
+                            <th><input type="date" id="couponDate3" onchange="updateCouponDateHeader(2, this.value)" placeholder="Date 3"></th>
+                            <th><input type="date" id="couponDate4" onchange="updateCouponDateHeader(3, this.value)" placeholder="Date 4"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="couponsTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="admin" class="tab-content">
+            <h2>Admin - Clubber Names</h2>
+            <div class="admin-section">
+                <div class="input-group">
+                    <label>Add Clubber:</label>
+                    <input type="text" id="newClubberName" placeholder="Enter clubber name">
+                    <button onclick="addClubber()">Add</button>
+                </div>
+                <div id="clubbersList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Config Tab -->
+        <div id="config" class="tab-content">
+            <h2>Configuration</h2>
+            
+            <div class="config-section">
+                <h3>Books</h3>
+                <div class="input-group">
+                    <input type="text" id="newBook" placeholder="Enter book name">
+                    <button onclick="addBook()">Add Book</button>
+                </div>
+                <div id="booksList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Sections</h3>
+                <div class="input-group">
+                    <input type="text" id="newSection" placeholder="Enter section name">
+                    <button onclick="addSection()">Add Section</button>
+                </div>
+                <div id="sectionsList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Dates</h3>
+                <div class="input-group">
+                    <input type="date" id="newDate">
+                    <button onclick="addDate()">Add Date</button>
+                </div>
+                <div id="datesList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
