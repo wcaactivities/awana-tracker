@@ -738,7 +738,10 @@ function importFromExcel(event) {
                 const clubbersData = XLSX.utils.sheet_to_json(clubbersSheet, { header: 1 });
                 
                 for (let i = 1; i < clubbersData.length; i++) {
-                    const name = clubbersData[i][0];
+                    const row = clubbersData[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    const name = row[0];
                     if (name && name.trim()) {
                         appData.clubbers.push({
                             id: Date.now().toString() + i,
@@ -754,9 +757,12 @@ function importFromExcel(event) {
                 const configData = XLSX.utils.sheet_to_json(configSheet, { header: 1 });
                 
                 for (let i = 1; i < configData.length; i++) {
-                    const book = configData[i][0];
-                    const section = configData[i][1];
-                    const date = configData[i][2];
+                    const row = configData[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    const book = row[0];
+                    const section = row[1];
+                    const date = row[2];
                     
                     if (book && book.trim()) {
                         appData.books.push({
@@ -799,6 +805,8 @@ function importFromExcel(event) {
                         
                         for (let i = 1; i < progressData.length; i++) {
                             const row = progressData[i];
+                            if (!row || row.length === 0) continue;
+                            
                             const clubberName = row[0];
                             const clubber = appData.clubbers.find(c => c.name === clubberName);
                             
