@@ -453,7 +453,7 @@ function calculateClubberSummary(clubberId) {
                     attendance++;
                 }
                 
-                // Calculate coupons: 2 for each checkbox + earned coupons - spent coupons
+                // Calculate coupons: 2 for each checkbox + earned coupons - spent coupons from progress table
                 let couponsForDate = 0;
                 if (clubberProgress.present) couponsForDate += 2;
                 if (clubberProgress.uniform) couponsForDate += 2;
@@ -476,6 +476,11 @@ function calculateClubberSummary(clubberId) {
             }
         }
     });
+
+    // Subtract spending from the Coupons tab (4 columns)
+    const spending = appData.couponSpending[clubberId] || [0, 0, 0, 0];
+    const totalSpent = spending.reduce((sum, val) => sum + (val || 0), 0);
+    totalCoupons -= totalSpent;
 
     return {
         attendance,
@@ -729,7 +734,9 @@ function importFromExcel(event) {
                 books: [],
                 sections: [],
                 dates: [],
-                progressData: {}
+                progressData: {},
+                couponDates: ['', '', '', ''],
+                couponSpending: {}
             };
             
             // Import Clubbers
@@ -743,10 +750,13 @@ function importFromExcel(event) {
                     
                     const name = row[0];
                     if (name && name.trim()) {
+                        const id = Date.now().toString() + i;
                         appData.clubbers.push({
-                            id: Date.now().toString() + i,
+                            id: id,
                             name: name.trim()
                         });
+                        // Initialize coupon spending for this clubber
+                        appData.couponSpending[id] = [0, 0, 0, 0];
                     }
                 }
             }

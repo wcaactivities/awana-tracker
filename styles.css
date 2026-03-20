@@ -33,13 +33,28 @@ body {
 header {
     background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
     color: white;
-    padding: 30px;
+    padding: 20px 30px;
     text-align: center;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.sparks-logo {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
 }
 
 header h1 {
     font-size: 2.5em;
     font-weight: 600;
+    margin: 0;
 }
 
 .tabs {
@@ -105,7 +120,9 @@ h3 {
 
 .table-container {
     overflow-x: auto;
+    overflow-y: auto;
     margin-top: 20px;
+    max-height: 600px;
 }
 
 table {
@@ -123,6 +140,7 @@ th {
     font-weight: 600;
     position: sticky;
     top: 0;
+    z-index: 10;
 }
 
 td {
@@ -300,11 +318,19 @@ select {
     }
 
     header {
-        padding: 20px;
+        padding: 15px;
+    }
+
+    .header-content {
+        gap: 10px;
+    }
+
+    .sparks-logo {
+        height: 60px;
     }
 
     header h1 {
-        font-size: 1.8em;
+        font-size: 1.5em;
     }
 
     .tab-button {
