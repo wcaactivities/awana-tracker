@@ -298,12 +298,12 @@ function renderProgress() {
     const tbody = document.getElementById('progressTableBody');
     
     if (!currentDate) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Please select a date to view/edit progress</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Please select a date to view/edit progress</td></tr>';
         return;
     }
 
     if (appData.clubbers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No clubbers added yet. Add clubbers in the Admin tab.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No clubbers added yet. Add clubbers in the Admin tab.</td></tr>';
         return;
     }
 
@@ -326,6 +326,11 @@ function renderProgress() {
     // Sort clubbers alphabetically by name
     const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
     
+    // Generate dropdown options for coupons earned (1-50)
+    const couponOptions = Array.from({length: 50}, (_, i) => i + 1)
+        .map(num => `<option value="${num}">${num}</option>`)
+        .join('');
+    
     tbody.innerHTML = sortedClubbers.map(clubber => {
         const progress = appData.progressData[currentDate].find(p => p.clubberId === clubber.id) || {
             clubberId: clubber.id,
@@ -342,18 +347,24 @@ function renderProgress() {
         return `
             <tr>
                 <td><strong>${clubber.name}</strong></td>
-                <td><input type="checkbox" ${progress.present ? 'checked' : ''} 
+                <td><input type="checkbox" ${progress.present ? 'checked' : ''}
                           onchange="updateProgress('${currentDate}', '${clubber.id}', 'present', this.checked)"></td>
-                <td><input type="checkbox" ${progress.uniform ? 'checked' : ''} 
+                <td><input type="checkbox" ${progress.uniform ? 'checked' : ''}
                           onchange="updateProgress('${currentDate}', '${clubber.id}', 'uniform', this.checked)"></td>
-                <td><input type="checkbox" ${progress.handbook ? 'checked' : ''} 
+                <td><input type="checkbox" ${progress.handbook ? 'checked' : ''}
                           onchange="updateProgress('${currentDate}', '${clubber.id}', 'handbook', this.checked)"></td>
-                <td><input type="checkbox" ${progress.bible ? 'checked' : ''} 
+                <td><input type="checkbox" ${progress.bible ? 'checked' : ''}
                           onchange="updateProgress('${currentDate}', '${clubber.id}', 'bible', this.checked)"></td>
-                <td><input type="number" min="0" value="${progress.couponsEarned}" 
-                          onchange="updateProgress('${currentDate}', '${clubber.id}', 'couponsEarned', parseInt(this.value) || 0)"></td>
-                <td><input type="number" min="0" value="${progress.couponsSpent}" 
-                          onchange="updateProgress('${currentDate}', '${clubber.id}', 'couponsSpent', parseInt(this.value) || 0)"></td>
+                <td>
+                    <select onchange="updateProgress('${currentDate}', '${clubber.id}', 'couponsEarned', parseInt(this.value) || 0)">
+                        <option value="0" ${progress.couponsEarned === 0 ? 'selected' : ''}>0</option>
+                        ${couponOptions.split('</option>').map(opt => {
+                            if (!opt) return '';
+                            const value = opt.match(/value="(\d+)"/)?.[1];
+                            return opt + '</option>';
+                        }).join('').replace(new RegExp(`value="${progress.couponsEarned}"`), `value="${progress.couponsEarned}" selected`)}
+                    </select>
+                </td>
                 <td>
                     <select onchange="updateProgress('${currentDate}', '${clubber.id}', 'book', this.value)">
                         <option value="">-- Select Book --</option>
@@ -494,6 +505,11 @@ function renderCoupons() {
     // Sort clubbers alphabetically by name
     const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
     
+    // Generate dropdown options for coupon spending (1-50)
+    const couponOptions = Array.from({length: 50}, (_, i) => i + 1)
+        .map(num => `<option value="${num}">${num}</option>`)
+        .join('');
+    
     tbody.innerHTML = sortedClubbers.map(clubber => {
         // Initialize coupon spending data if it doesn't exist
         if (!appData.couponSpending[clubber.id]) {
@@ -507,14 +523,30 @@ function renderCoupons() {
             <tr>
                 <td><strong>${clubber.name}</strong></td>
                 <td><strong>${balance}</strong></td>
-                <td><input type="number" min="0" value="${spending[0] || 0}"
-                          onchange="updateCouponSpending('${clubber.id}', 0, parseInt(this.value) || 0)"></td>
-                <td><input type="number" min="0" value="${spending[1] || 0}"
-                          onchange="updateCouponSpending('${clubber.id}', 1, parseInt(this.value) || 0)"></td>
-                <td><input type="number" min="0" value="${spending[2] || 0}"
-                          onchange="updateCouponSpending('${clubber.id}', 2, parseInt(this.value) || 0)"></td>
-                <td><input type="number" min="0" value="${spending[3] || 0}"
-                          onchange="updateCouponSpending('${clubber.id}', 3, parseInt(this.value) || 0)"></td>
+                <td>
+                    <select onchange="updateCouponSpending('${clubber.id}', 0, parseInt(this.value) || 0)">
+                        <option value="0" ${spending[0] === 0 ? 'selected' : ''}>0</option>
+                        ${couponOptions.replace(new RegExp(`value="${spending[0]}"`), `value="${spending[0]}" selected`)}
+                    </select>
+                </td>
+                <td>
+                    <select onchange="updateCouponSpending('${clubber.id}', 1, parseInt(this.value) || 0)">
+                        <option value="0" ${spending[1] === 0 ? 'selected' : ''}>0</option>
+                        ${couponOptions.replace(new RegExp(`value="${spending[1]}"`), `value="${spending[1]}" selected`)}
+                    </select>
+                </td>
+                <td>
+                    <select onchange="updateCouponSpending('${clubber.id}', 2, parseInt(this.value) || 0)">
+                        <option value="0" ${spending[2] === 0 ? 'selected' : ''}>0</option>
+                        ${couponOptions.replace(new RegExp(`value="${spending[2]}"`), `value="${spending[2]}" selected`)}
+                    </select>
+                </td>
+                <td>
+                    <select onchange="updateCouponSpending('${clubber.id}', 3, parseInt(this.value) || 0)">
+                        <option value="0" ${spending[3] === 0 ? 'selected' : ''}>0</option>
+                        ${couponOptions.replace(new RegExp(`value="${spending[3]}"`), `value="${spending[3]}" selected`)}
+                    </select>
+                </td>
             </tr>
         `;
     }).join('');
@@ -611,7 +643,7 @@ function exportToExcel() {
     // Export Progress Sheets (one sheet per date)
     appData.dates.sort().forEach(date => {
         const progressData = [
-            ['Clubber Name', 'Present', 'Uniform', 'Handbook', 'Bible', 'Coupons Earned', 'Coupons Spent', 'Book', 'Section']
+            ['Clubber Name', 'Present', 'Uniform', 'Handbook', 'Bible', 'Coupons Earned', 'Book', 'Section']
         ];
         
         const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
@@ -634,7 +666,6 @@ function exportToExcel() {
                 progress.handbook ? 'Yes' : 'No',
                 progress.bible ? 'Yes' : 'No',
                 progress.couponsEarned || 0,
-                progress.couponsSpent || 0,
                 progress.book || '',
                 progress.section || ''
             ]);
@@ -779,9 +810,9 @@ function importFromExcel(event) {
                                     handbook: row[3] === 'Yes' || row[3] === true,
                                     bible: row[4] === 'Yes' || row[4] === true,
                                     couponsEarned: parseInt(row[5]) || 0,
-                                    couponsSpent: parseInt(row[6]) || 0,
-                                    book: row[7] || '',
-                                    section: row[8] || ''
+                                    couponsSpent: 0,
+                                    book: row[6] || '',
+                                    section: row[7] || ''
                                 });
                             }
                         }
