@@ -327,7 +327,7 @@ function renderProgress() {
     const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
     
     // Generate dropdown options for coupons earned (1-50)
-    const couponOptions = Array.from({length: 50}, (_, i) => i + 1)
+    const couponOptions = Array.from({length: 300}, (_, i) => i + 1)
         .map(num => `<option value="${num}">${num}</option>`)
         .join('');
     
