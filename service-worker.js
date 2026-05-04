@@ -24,15 +24,26 @@ self.addEventListener('install', event => {
 
 // Fetch event - network first, then cache
 self.addEventListener('fetch', event => {
+  // Only handle http and https requests
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Clone the response
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME)
-          .then(cache => {
-            cache.put(event.request, responseToCache);
-          });
+        // Only cache successful responses
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            })
+            .catch(err => {
+              // Silently fail cache errors
+              console.log('Cache put error:', err);
+            });
+        }
         return response;
       })
       .catch(() => {
