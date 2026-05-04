@@ -305,11 +305,22 @@ class GoogleDriveSync {
             if (this.config.sharedFileId) {
                 this.fileId = this.config.sharedFileId;
                 
-                // Download the shared file
-                const content = await this.makeApiCall(
-                    'GET',
-                    `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`
+                // Download the shared file - use raw fetch for media download
+                const response = await fetch(
+                    `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`
+                        }
+                    }
                 );
+
+                if (!response.ok) {
+                    throw new Error('Failed to download shared file. Make sure the file is shared with you.');
+                }
+
+                const text = await response.text();
+                const content = JSON.parse(text);
 
                 const now = new Date().toISOString();
                 this.saveConfig({ lastSync: now });
@@ -338,11 +349,22 @@ class GoogleDriveSync {
 
             this.fileId = searchResponse.files[0].id;
 
-            // Download file content
-            const content = await this.makeApiCall(
-                'GET',
-                `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`
+            // Download file content - use raw fetch for media download
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                }
             );
+
+            if (!response.ok) {
+                throw new Error('Failed to download file');
+            }
+
+            const text = await response.text();
+            const content = JSON.parse(text);
 
             const now = new Date().toISOString();
             this.saveConfig({ lastSync: now });
