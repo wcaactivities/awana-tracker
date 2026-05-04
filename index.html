@@ -149,6 +149,11 @@
                     <label>Folder Name:</label>
                     <input type="text" id="folderName" placeholder="Awana-Tracker-Data">
                 </div>
+                <div class="input-group">
+                    <label>🔗 Shared File ID (for multi-user collaboration):</label>
+                    <input type="text" id="sharedFileId" placeholder="Leave empty to create your own file">
+                    <button onclick="copyCurrentFileId()" style="margin-left: 10px;">📋 Copy My File ID</button>
+                </div>
                 <div class="sync-controls">
                     <button onclick="saveGoogleDriveConfig()">💾 Save Configuration</button>
                     <button onclick="testGoogleDriveConnection()">🔌 Test Connection</button>
@@ -160,7 +165,12 @@
                     <p><small>⚠️ <strong>Important:</strong> Use a Google App Password, not your regular password.
                     <a href="https://support.google.com/accounts/answer/185833" target="_blank">Learn how to create one</a></small></p>
                     <p><small>📁 All data will be stored in a folder named above in your Google Drive.</small></p>
-                    <p><small>👥 Multiple users can sync to the same folder for collaborative tracking.</small></p>
+                    <p><small>👥 <strong>Multi-User Collaboration:</strong></small></p>
+                    <ul style="font-size: 0.9em; margin: 5px 0; padding-left: 20px;">
+                        <li><strong>Admin Setup:</strong> Leave "Shared File ID" empty, sync your data, then click "Copy My File ID" and share it with your team</li>
+                        <li><strong>Team Members:</strong> Paste the shared File ID, save config, then click "Load from Drive" to get the shared data</li>
+                        <li><strong>Important:</strong> Admin must share the file in Google Drive (right-click → Share → add team emails with Editor access)</li>
+                    </ul>
                 </div>
             </div>
         </div>

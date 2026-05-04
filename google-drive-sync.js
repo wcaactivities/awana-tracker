@@ -22,6 +22,7 @@ class GoogleDriveSync {
             email: '',
             password: '',
             folderName: 'Awana-Tracker-Data',
+            sharedFileId: '',
             lastSync: null,
             autoSync: false
         };
@@ -202,10 +203,30 @@ class GoogleDriveSync {
         }
 
         try {
-            await this.findOrCreateFolder();
-
             const fileName = 'awana-tracker-data.json';
             const fileContent = JSON.stringify(data, null, 2);
+
+            // If shared file ID is provided, use it directly
+            if (this.config.sharedFileId) {
+                this.fileId = this.config.sharedFileId;
+                
+                // Update the shared file
+                const response = await this.makeApiCall(
+                    'PATCH',
+                    `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`,
+                    null,
+                    fileContent,
+                    'application/json'
+                );
+
+                const now = new Date().toISOString();
+                this.saveConfig({ lastSync: now });
+                this.updateSyncStatus('Synced to shared file', now);
+                return response;
+            }
+
+            // Otherwise, use folder-based approach (original behavior)
+            await this.findOrCreateFolder();
 
             // Check if file already exists
             const searchResponse = await this.makeApiCall(
@@ -269,6 +290,23 @@ class GoogleDriveSync {
         }
 
         try {
+            // If shared file ID is provided, use it directly
+            if (this.config.sharedFileId) {
+                this.fileId = this.config.sharedFileId;
+                
+                // Download the shared file
+                const content = await this.makeApiCall(
+                    'GET',
+                    `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`
+                );
+
+                const now = new Date().toISOString();
+                this.saveConfig({ lastSync: now });
+                this.updateSyncStatus('Loaded from shared file', now);
+                return content;
+            }
+
+            // Otherwise, use folder-based approach (original behavior)
             await this.findOrCreateFolder();
 
             const fileName = 'awana-tracker-data.json';
@@ -383,16 +421,29 @@ class GoogleDriveSync {
         const emailInput = document.getElementById('googleEmail');
         const passwordInput = document.getElementById('googlePassword');
         const folderInput = document.getElementById('folderName');
+        const sharedFileIdInput = document.getElementById('sharedFileId');
 
         if (emailInput) emailInput.value = this.config.email || '';
         if (passwordInput) passwordInput.value = this.config.password || '';
         if (folderInput) folderInput.value = this.config.folderName || 'Awana-Tracker-Data';
+        if (sharedFileIdInput) sharedFileIdInput.value = this.config.sharedFileId || '';
 
         if (this.config.lastSync) {
             this.updateSyncStatus('Configured', this.config.lastSync);
         } else {
             this.updateSyncStatus('Not configured', null);
         }
+    }
+
+    // Get current file ID for sharing
+    getCurrentFileId() {
+        if (this.fileId) {
+            return this.fileId;
+        }
+        if (this.config.sharedFileId) {
+            return this.config.sharedFileId;
+        }
+        return null;
     }
 }
 
