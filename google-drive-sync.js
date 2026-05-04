@@ -62,17 +62,32 @@ class GoogleDriveSync {
                 gapi.load('client:auth2', resolve);
             });
 
-            // Note: In production, you would need to register your app with Google
-            // and get a Client ID. For now, we'll use a placeholder approach.
-            
             this.updateSyncStatus('Authenticating...', null);
             
-            // This is a simplified version - in production you'd need proper OAuth
-            throw new Error('Google Drive integration requires OAuth 2.0 setup. Please see documentation for setup instructions.');
+            // Initialize with your Google Cloud Project credentials
+            await gapi.client.init({
+                clientId: '965143781181-7dqor68ukfhe8gu6c2kgf7s894lougsu.apps.googleusercontent.com',
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                scope: 'https://www.googleapis.com/auth/drive.file'
+            });
+
+            const authInstance = gapi.auth2.getAuthInstance();
+            
+            if (!authInstance.isSignedIn.get()) {
+                await authInstance.signIn();
+            }
+
+            const user = authInstance.currentUser.get();
+            const authResponse = user.getAuthResponse(true);
+            this.accessToken = authResponse.access_token;
+            this.isAuthenticated = true;
+
+            this.updateSyncStatus('Connected to Google Drive', null);
+            return true;
             
         } catch (error) {
             console.error('Authentication error:', error);
-            this.updateSyncStatus('Authentication failed', null);
+            this.updateSyncStatus('Authentication failed: ' + error.message, null);
             throw error;
         }
     }

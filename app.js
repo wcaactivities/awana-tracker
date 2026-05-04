@@ -927,33 +927,15 @@ async function testGoogleDriveConnection() {
     try {
         googleDriveSync.updateSyncStatus('Testing connection...', null);
         
-        // Show information about OAuth setup
-        const message = `Google Drive Integration Setup Required:
-
-This app uses Google Drive API which requires OAuth 2.0 authentication.
-
-To enable Google Drive sync:
-
-1. Go to Google Cloud Console (console.cloud.google.com)
-2. Create a new project or select existing one
-3. Enable Google Drive API
-4. Create OAuth 2.0 credentials (Web application)
-5. Add authorized JavaScript origins:
-   - http://localhost
-   - Your app's URL
-6. Add authorized redirect URIs
-7. Copy the Client ID
-8. Update the app with your Client ID
-
-For detailed instructions, see GOOGLE_DRIVE_SETUP.md
-
-Alternative: Use the Export/Import Excel feature for manual backup and sharing.`;
-
-        alert(message);
-        googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        const success = await googleDriveSync.authenticate();
+        
+        if (success) {
+            alert('Successfully connected to Google Drive!\n\nYou can now use Sync to Drive and Load from Drive features.');
+            googleDriveSync.updateSyncStatus('Connected', new Date().toISOString());
+        }
         
     } catch (error) {
-        alert('Connection test failed: ' + error.message);
+        alert('Connection test failed: ' + error.message + '\n\nPlease make sure:\n1. You have internet connection\n2. Pop-ups are not blocked\n3. You grant the necessary permissions');
         googleDriveSync.updateSyncStatus('Connection failed', null);
     }
 }
@@ -961,27 +943,20 @@ Alternative: Use the Export/Import Excel feature for manual backup and sharing.`
 async function syncToGoogleDrive() {
     try {
         // Check if configuration exists
-        if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
-            alert('Please configure Google Drive settings first');
+        if (!googleDriveSync.config.folderName) {
+            alert('Please configure the folder name in Google Drive settings first');
             return;
         }
 
-        googleDriveSync.updateSyncStatus('Syncing to Google Drive...', null);
-
-        // For now, show a message about OAuth requirement
-        const useAlternative = confirm(
-            'Google Drive API sync requires OAuth 2.0 setup.\n\n' +
-            'Would you like to use the Excel Export feature instead?\n\n' +
-            'Click OK to export to Excel, or Cancel to continue with setup.'
-        );
-
-        if (useAlternative) {
-            exportToExcel();
-            googleDriveSync.updateSyncStatus('Exported to Excel instead', new Date().toISOString());
-        } else {
-            alert('To enable Google Drive sync, please complete the OAuth 2.0 setup.\nSee GOOGLE_DRIVE_SETUP.md for instructions.');
-            googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        if (!googleDriveSync.isAuthenticated) {
+            await googleDriveSync.authenticate();
         }
+
+        googleDriveSync.updateSyncStatus('Syncing to Google Drive...', null);
+        
+        await googleDriveSync.uploadData(appData);
+        
+        alert('Data synced to Google Drive successfully!\n\nFolder: ' + googleDriveSync.config.folderName);
 
     } catch (error) {
         alert('Sync failed: ' + error.message);
@@ -992,26 +967,24 @@ async function syncToGoogleDrive() {
 async function loadFromGoogleDrive() {
     try {
         // Check if configuration exists
-        if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
-            alert('Please configure Google Drive settings first');
+        if (!googleDriveSync.config.folderName) {
+            alert('Please configure the folder name in Google Drive settings first');
             return;
         }
 
+        if (!googleDriveSync.isAuthenticated) {
+            await googleDriveSync.authenticate();
+        }
+
         googleDriveSync.updateSyncStatus('Loading from Google Drive...', null);
-
-        // For now, show a message about OAuth requirement
-        const useAlternative = confirm(
-            'Google Drive API sync requires OAuth 2.0 setup.\n\n' +
-            'Would you like to use the Excel Import feature instead?\n\n' +
-            'Click OK to import from Excel, or Cancel to continue with setup.'
-        );
-
-        if (useAlternative) {
-            document.getElementById('importFile').click();
-            googleDriveSync.updateSyncStatus('Use Import from Excel', null);
-        } else {
-            alert('To enable Google Drive sync, please complete the OAuth 2.0 setup.\nSee GOOGLE_DRIVE_SETUP.md for instructions.');
-            googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        
+        const data = await googleDriveSync.downloadData();
+        
+        if (confirm('This will replace all current data with data from Google Drive. Continue?')) {
+            appData = data;
+            saveData();
+            renderAll();
+            alert('Data loaded from Google Drive successfully!\n\nFolder: ' + googleDriveSync.config.folderName);
         }
 
     } catch (error) {
@@ -1021,7 +994,7 @@ async function loadFromGoogleDrive() {
 }
 
 function enableAutoSync() {
-    if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
+    if (!googleDriveSync.config.folderName) {
         alert('Please configure Google Drive settings first');
         return;
     }
@@ -1031,7 +1004,7 @@ function enableAutoSync() {
     } else {
         const minutes = prompt('Enter auto-sync interval in minutes (recommended: 5-15):', '5');
         if (minutes && !isNaN(minutes) && minutes > 0) {
-            alert('Auto-sync will be available once OAuth 2.0 is configured.\n\nFor now, please use manual Export/Import or complete the OAuth setup.');
+            googleDriveSync.enableAutoSync(parseInt(minutes));
         }
     }
 }
