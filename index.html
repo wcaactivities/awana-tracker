@@ -10,13 +10,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Awana Tracker">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.gstatic.com https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://apis.google.com https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com; frame-src https://accounts.google.com; font-src 'self' data:;">
     <title>Awana Sparks Tracker</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="stylesheet" href="./styles.css">
     <!-- SheetJS library for Excel import/export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <!-- Google API Client Library -->
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Google Identity Services (new OAuth library) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google API Client Library (for Drive API calls) -->
+    <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
     <div class="container">

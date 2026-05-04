@@ -47,48 +47,76 @@ class GoogleDriveSync {
         }
     }
 
-    // Authenticate with Google Drive using OAuth 2.0
+    // Authenticate with Google Drive using OAuth 2.0 (Google Identity Services)
     async authenticate() {
         try {
-            // For a client-side web app, we need to use Google's OAuth 2.0 flow
-            // This requires the Google API Client Library
-            
-            if (!window.gapi) {
-                throw new Error('Google API library not loaded. Please check your internet connection.');
+            // Check if running on file:// protocol
+            if (window.location.protocol === 'file:') {
+                throw new Error('Google OAuth does not work with file:// protocol. Please use a web server (http:// or https://). You can use "python -m http.server" or VS Code Live Server.');
             }
 
-            // Initialize the Google API client
+            if (!window.google || !window.gapi) {
+                throw new Error('Google libraries not loaded. Please check your internet connection and reload the page.');
+            }
+
+            this.updateSyncStatus('Loading Google API...', null);
+
+            // Initialize the Google API client for Drive API calls
             await new Promise((resolve, reject) => {
-                gapi.load('client:auth2', resolve);
+                gapi.load('client', {
+                    callback: resolve,
+                    onerror: () => reject(new Error('Failed to load Google API client'))
+                });
             });
 
-            this.updateSyncStatus('Authenticating...', null);
-            
-            // Initialize with your Google Cloud Project credentials
             await gapi.client.init({
-                clientId: '965143781181-7dqor68ukfhe8gu6c2kgf7s894lougsu.apps.googleusercontent.com',
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                scope: 'https://www.googleapis.com/auth/drive.file'
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
             });
 
-            const authInstance = gapi.auth2.getAuthInstance();
-            
-            if (!authInstance.isSignedIn.get()) {
-                await authInstance.signIn();
-            }
+            this.updateSyncStatus('Requesting authorization...', null);
 
-            const user = authInstance.currentUser.get();
-            const authResponse = user.getAuthResponse(true);
-            this.accessToken = authResponse.access_token;
-            this.isAuthenticated = true;
+            // Use Google Identity Services for OAuth
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: '965143781181-7dqor68ukfhe8gu6c2kgf7s894lougsu.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (response) => {
+                    if (response.error) {
+                        throw new Error(response.error);
+                    }
+                    this.accessToken = response.access_token;
+                    this.isAuthenticated = true;
+                    gapi.client.setToken({ access_token: this.accessToken });
+                    this.updateSyncStatus('Connected to Google Drive', new Date().toISOString());
+                }
+            });
 
-            this.updateSyncStatus('Connected to Google Drive', null);
-            return true;
+            // Request access token
+            return new Promise((resolve, reject) => {
+                try {
+                    client.callback = (response) => {
+                        if (response.error) {
+                            reject(new Error(response.error));
+                            return;
+                        }
+                        this.accessToken = response.access_token;
+                        this.isAuthenticated = true;
+                        gapi.client.setToken({ access_token: this.accessToken });
+                        this.updateSyncStatus('Connected to Google Drive', new Date().toISOString());
+                        resolve(true);
+                    };
+                    
+                    // Trigger the OAuth flow
+                    client.requestAccessToken({ prompt: 'consent' });
+                } catch (error) {
+                    reject(error);
+                }
+            });
             
         } catch (error) {
             console.error('Authentication error:', error);
-            this.updateSyncStatus('Authentication failed: ' + error.message, null);
-            throw error;
+            const errorMessage = error.message || 'Unknown error occurred';
+            this.updateSyncStatus('Authentication failed', null);
+            throw new Error(errorMessage);
         }
     }
 
