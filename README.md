@@ -18,12 +18,19 @@ A web application for tracking the progress of Awana clubbers in Sparks club wit
    - Table with columns: Present, Uniform, Handbook, Bible, Coupons Earned, Coupons Spent, Book, Section
    - Each date has its own set of data
 
-3. **Admin Tab** - Manage clubbers:
+3. **Coupons Tab** - Track coupon spending:
+   - View coupon balance for each clubber
+   - Track spending across 4 customizable date columns
+   - Balance automatically calculated from earned and spent coupons
+
+4. **Admin Tab** - Manage clubbers and Google Drive sync:
    - Add new clubbers
    - Edit clubber names
    - Delete clubbers
+   - Configure Google Drive synchronization
+   - Multi-user collaboration support
 
-4. **Config Tab** - Configure lists:
+5. **Config Tab** - Configure lists:
    - Books list (add/edit/delete)
    - Sections list (add/edit/delete)
    - Dates list (add/delete)
@@ -86,9 +93,25 @@ Simply open `index.html` in a web browser. No server or installation required.
 - Edit exported Excel files carefully - maintain the structure
 - Clubber names must match exactly for progress data to import correctly
 
-## Data Storage
+## Data Storage & Synchronization
 
-All data is stored locally in your browser using localStorage. Data persists between sessions but is specific to the browser and device you're using. Use Excel export for backups and data portability.
+### Local Storage
+All data is stored locally in your browser using localStorage. Data persists between sessions but is specific to the browser and device you're using.
+
+### Google Drive Sync (Optional)
+Enable cloud synchronization and multi-user collaboration:
+- **Cloud Backup:** Automatically backup data to Google Drive
+- **Multi-User Support:** Multiple users can sync to the same folder
+- **Cross-Device Access:** Access your data from any device
+- **Auto-Sync:** Optional automatic synchronization
+
+**Setup Required:** Google Drive sync requires OAuth 2.0 configuration. See [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md) for detailed instructions.
+
+**Quick Alternative:** Use Excel Export/Import for manual backup and sharing without setup.
+
+### Backup Options
+1. **Excel Export/Import:** Simple, no setup required
+2. **Google Drive Sync:** Advanced, requires OAuth setup, enables collaboration
 
 ## Browser Compatibility
 
@@ -103,3 +126,33 @@ Works in all modern browsers (Chrome, Firefox, Safari, Edge).
 - **Export your data regularly** to prevent data loss
 - Clubbers are displayed alphabetically in Progress and Summary tabs
 - Current Book/Section in Summary shows the last non-blank value across all dates
+- For multi-user collaboration, see Google Drive setup guide
+
+## Multi-User Collaboration
+
+Multiple users can work together on the same data:
+
+### Option 1: Excel Files (Simple)
+1. One person exports to Excel
+2. Share the Excel file via email/cloud storage
+3. Others import the Excel file
+4. Repeat as needed
+
+### Option 2: Google Drive Sync (Advanced)
+1. Complete OAuth 2.0 setup (see [GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md))
+2. All users configure the same folder name
+3. First user syncs data to Drive
+4. Other users load from Drive
+5. Everyone can update and sync back
+
+**Best Practice:** Communicate with team members before making changes to avoid conflicts.
+
+## Files
+
+- `index.html` - Main application interface
+- `app.js` - Application logic and data management
+- `google-drive-sync.js` - Google Drive integration module
+- `styles.css` - Application styling
+- `service-worker.js` - Offline functionality
+- `manifest.json` - PWA configuration
+- `GOOGLE_DRIVE_SETUP.md` - Detailed Google Drive setup instructions

@@ -412,4 +412,58 @@ select {
     font-size: 1.1em;
 }
 
+/* Google Drive Sync Styles */
+.sync-status {
+    background: #f0f9ff;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.sync-status p {
+    margin: 5px 0;
+    color: #1e40af;
+}
+
+.sync-status span {
+    color: #0c4a6e;
+    font-weight: 600;
+}
+
+.sync-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.sync-controls button {
+    flex: 1;
+    min-width: 150px;
+}
+
+.sync-info {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    border-radius: 4px;
+}
+
+.sync-info p {
+    margin: 8px 0;
+    color: #92400e;
+    line-height: 1.5;
+}
+
+.sync-info a {
+    color: #dc2626;
+    text-decoration: underline;
+}
+
+.sync-info a:hover {
+    color: #991b1b;
+}
+
 /* Made with Bob */

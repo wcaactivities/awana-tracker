@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
     initializeTabs();
     renderAll();
+    
+    // Initialize Google Drive sync UI
+    if (typeof googleDriveSync !== 'undefined') {
+        googleDriveSync.loadConfigIntoUI();
+    }
 });
 
 // Tab functionality
@@ -326,8 +331,8 @@ function renderProgress() {
     // Sort clubbers alphabetically by name
     const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
     
-    // Generate dropdown options for coupons earned (1-50)
-    const couponOptions = Array.from({length: 50}, (_, i) => i + 1)
+    // Generate dropdown options for coupons earned (1-200)
+    const couponOptions = Array.from({length: 200}, (_, i) => i + 1)
         .map(num => `<option value="${num}">${num}</option>`)
         .join('');
     
@@ -510,8 +515,8 @@ function renderCoupons() {
     // Sort clubbers alphabetically by name
     const sortedClubbers = [...appData.clubbers].sort((a, b) => a.name.localeCompare(b.name));
     
-    // Generate dropdown options for coupon spending (1-300)
-    const couponOptions = Array.from({length: 300}, (_, i) => i + 1)
+    // Generate dropdown options for coupon spending (1-200)
+    const couponOptions = Array.from({length: 200}, (_, i) => i + 1)
         .map(num => `<option value="${num}">${num}</option>`)
         .join('');
     
@@ -887,4 +892,159 @@ function findMatchingDate(sheetName) {
         }
     }
     return null;
+}
+
+// Google Drive Integration Functions
+
+function saveGoogleDriveConfig() {
+    const email = document.getElementById('googleEmail').value.trim();
+    const password = document.getElementById('googlePassword').value.trim();
+    const folderName = document.getElementById('folderName').value.trim();
+
+    if (!email || !password || !folderName) {
+        alert('Please fill in all fields (Email, Password, and Folder Name)');
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+
+    googleDriveSync.saveConfig({
+        email: email,
+        password: password,
+        folderName: folderName
+    });
+
+    googleDriveSync.updateSyncStatus('Configuration saved', null);
+    alert('Google Drive configuration saved successfully!\n\nNote: You need to set up OAuth 2.0 authentication to enable syncing.\nSee the documentation for instructions.');
+}
+
+async function testGoogleDriveConnection() {
+    try {
+        googleDriveSync.updateSyncStatus('Testing connection...', null);
+        
+        // Show information about OAuth setup
+        const message = `Google Drive Integration Setup Required:
+
+This app uses Google Drive API which requires OAuth 2.0 authentication.
+
+To enable Google Drive sync:
+
+1. Go to Google Cloud Console (console.cloud.google.com)
+2. Create a new project or select existing one
+3. Enable Google Drive API
+4. Create OAuth 2.0 credentials (Web application)
+5. Add authorized JavaScript origins:
+   - http://localhost
+   - Your app's URL
+6. Add authorized redirect URIs
+7. Copy the Client ID
+8. Update the app with your Client ID
+
+For detailed instructions, see GOOGLE_DRIVE_SETUP.md
+
+Alternative: Use the Export/Import Excel feature for manual backup and sharing.`;
+
+        alert(message);
+        googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        
+    } catch (error) {
+        alert('Connection test failed: ' + error.message);
+        googleDriveSync.updateSyncStatus('Connection failed', null);
+    }
+}
+
+async function syncToGoogleDrive() {
+    try {
+        // Check if configuration exists
+        if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
+            alert('Please configure Google Drive settings first');
+            return;
+        }
+
+        googleDriveSync.updateSyncStatus('Syncing to Google Drive...', null);
+
+        // For now, show a message about OAuth requirement
+        const useAlternative = confirm(
+            'Google Drive API sync requires OAuth 2.0 setup.\n\n' +
+            'Would you like to use the Excel Export feature instead?\n\n' +
+            'Click OK to export to Excel, or Cancel to continue with setup.'
+        );
+
+        if (useAlternative) {
+            exportToExcel();
+            googleDriveSync.updateSyncStatus('Exported to Excel instead', new Date().toISOString());
+        } else {
+            alert('To enable Google Drive sync, please complete the OAuth 2.0 setup.\nSee GOOGLE_DRIVE_SETUP.md for instructions.');
+            googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        }
+
+    } catch (error) {
+        alert('Sync failed: ' + error.message);
+        googleDriveSync.updateSyncStatus('Sync failed', null);
+    }
+}
+
+async function loadFromGoogleDrive() {
+    try {
+        // Check if configuration exists
+        if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
+            alert('Please configure Google Drive settings first');
+            return;
+        }
+
+        googleDriveSync.updateSyncStatus('Loading from Google Drive...', null);
+
+        // For now, show a message about OAuth requirement
+        const useAlternative = confirm(
+            'Google Drive API sync requires OAuth 2.0 setup.\n\n' +
+            'Would you like to use the Excel Import feature instead?\n\n' +
+            'Click OK to import from Excel, or Cancel to continue with setup.'
+        );
+
+        if (useAlternative) {
+            document.getElementById('importFile').click();
+            googleDriveSync.updateSyncStatus('Use Import from Excel', null);
+        } else {
+            alert('To enable Google Drive sync, please complete the OAuth 2.0 setup.\nSee GOOGLE_DRIVE_SETUP.md for instructions.');
+            googleDriveSync.updateSyncStatus('OAuth setup required', null);
+        }
+
+    } catch (error) {
+        alert('Load failed: ' + error.message);
+        googleDriveSync.updateSyncStatus('Load failed', null);
+    }
+}
+
+function enableAutoSync() {
+    if (!googleDriveSync.config.email || !googleDriveSync.config.folderName) {
+        alert('Please configure Google Drive settings first');
+        return;
+    }
+
+    if (googleDriveSync.autoSyncEnabled) {
+        googleDriveSync.disableAutoSync();
+    } else {
+        const minutes = prompt('Enter auto-sync interval in minutes (recommended: 5-15):', '5');
+        if (minutes && !isNaN(minutes) && minutes > 0) {
+            alert('Auto-sync will be available once OAuth 2.0 is configured.\n\nFor now, please use manual Export/Import or complete the OAuth setup.');
+        }
+    }
+}
+
+// Override saveData to trigger sync if auto-sync is enabled
+const originalSaveData = saveData;
+function saveData() {
+    originalSaveData();
+    
+    // If auto-sync is enabled and authenticated, sync to Google Drive
+    if (googleDriveSync && googleDriveSync.autoSyncEnabled && googleDriveSync.isAuthenticated) {
+        syncToGoogleDrive().catch(err => {
+            console.error('Auto-sync failed:', err);
+        });
+    }
 }

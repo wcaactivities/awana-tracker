@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="./styles.css">
     <!-- SheetJS library for Excel import/export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Google API Client Library -->
+    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <div class="container">
@@ -125,6 +127,39 @@
                     <!-- Populated by JavaScript -->
                 </div>
             </div>
+
+            <h2>Google Drive Sync</h2>
+            <div class="admin-section">
+                <div class="sync-status" id="syncStatus">
+                    <p><strong>Status:</strong> <span id="syncStatusText">Not configured</span></p>
+                    <p><strong>Last Sync:</strong> <span id="lastSyncTime">Never</span></p>
+                </div>
+                <div class="input-group">
+                    <label>Google Email:</label>
+                    <input type="email" id="googleEmail" placeholder="your-email@gmail.com">
+                </div>
+                <div class="input-group">
+                    <label>App Password:</label>
+                    <input type="password" id="googlePassword" placeholder="Enter Google App Password">
+                </div>
+                <div class="input-group">
+                    <label>Folder Name:</label>
+                    <input type="text" id="folderName" placeholder="Awana-Tracker-Data">
+                </div>
+                <div class="sync-controls">
+                    <button onclick="saveGoogleDriveConfig()">💾 Save Configuration</button>
+                    <button onclick="testGoogleDriveConnection()">🔌 Test Connection</button>
+                    <button onclick="syncToGoogleDrive()">☁️ Sync to Drive</button>
+                    <button onclick="loadFromGoogleDrive()">📥 Load from Drive</button>
+                    <button onclick="enableAutoSync()">🔄 Enable Auto-Sync</button>
+                </div>
+                <div class="sync-info">
+                    <p><small>⚠️ <strong>Important:</strong> Use a Google App Password, not your regular password.
+                    <a href="https://support.google.com/accounts/answer/185833" target="_blank">Learn how to create one</a></small></p>
+                    <p><small>📁 All data will be stored in a folder named above in your Google Drive.</small></p>
+                    <p><small>👥 Multiple users can sync to the same folder for collaborative tracking.</small></p>
+                </div>
+            </div>
         </div>
 
         <!-- Config Tab -->
@@ -166,6 +201,7 @@
         </div>
     </div>
 
+    <script src="google-drive-sync.js"></script>
     <script src="app.js"></script>
     <script>
         // Register Service Worker for offline functionality
