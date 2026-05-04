@@ -62,6 +62,13 @@ function switchTab(tabName) {
 // Local Storage functions
 function saveData() {
     localStorage.setItem('awanaTrackerData', JSON.stringify(appData));
+    
+    // If auto-sync is enabled and authenticated, sync to Google Drive
+    if (typeof googleDriveSync !== 'undefined' && googleDriveSync.autoSyncEnabled && googleDriveSync.isAuthenticated) {
+        syncToGoogleDrive().catch(err => {
+            console.error('Auto-sync failed:', err);
+        });
+    }
 }
 
 function loadData() {
@@ -1033,15 +1040,4 @@ function enableAutoSync() {
     }
 }
 
-// Override saveData to trigger sync if auto-sync is enabled
-const originalSaveData = saveData;
-function saveData() {
-    originalSaveData();
-    
-    // If auto-sync is enabled and authenticated, sync to Google Drive
-    if (googleDriveSync && googleDriveSync.autoSyncEnabled && googleDriveSync.isAuthenticated) {
-        syncToGoogleDrive().catch(err => {
-            console.error('Auto-sync failed:', err);
-        });
-    }
-}
+// Auto-sync functionality is now integrated into saveData() function above
