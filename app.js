@@ -900,6 +900,7 @@ function saveGoogleDriveConfig() {
     const email = document.getElementById('googleEmail').value.trim();
     const password = document.getElementById('googlePassword').value.trim();
     const folderName = document.getElementById('folderName').value.trim();
+    const sharedFileId = document.getElementById('sharedFileId').value.trim();
 
     if (!email || !password || !folderName) {
         alert('Please fill in all fields (Email, Password, and Folder Name)');
@@ -916,11 +917,34 @@ function saveGoogleDriveConfig() {
     googleDriveSync.saveConfig({
         email: email,
         password: password,
-        folderName: folderName
+        folderName: folderName,
+        sharedFileId: sharedFileId
     });
 
     googleDriveSync.updateSyncStatus('Configuration saved', null);
-    alert('Google Drive configuration saved successfully!\n\nNote: You need to set up OAuth 2.0 authentication to enable syncing.\nSee the documentation for instructions.');
+    
+    if (sharedFileId) {
+        alert('Google Drive configuration saved successfully!\n\nYou are now using a shared file for multi-user collaboration.\nClick "Load from Drive" to get the latest shared data.');
+    } else {
+        alert('Google Drive configuration saved successfully!\n\nNote: You need to set up OAuth 2.0 authentication to enable syncing.\nSee the documentation for instructions.');
+    }
+}
+
+function copyCurrentFileId() {
+    const fileId = googleDriveSync.getCurrentFileId();
+    
+    if (!fileId) {
+        alert('No file ID available yet.\n\nPlease:\n1. Connect to Google Drive (Test Connection)\n2. Sync your data to Drive first\n3. Then you can copy the file ID to share with your team');
+        return;
+    }
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(fileId).then(() => {
+        alert('File ID copied to clipboard!\n\nFile ID: ' + fileId + '\n\nShare this ID with your team members.\n\nIMPORTANT: You must also share the file in Google Drive:\n1. Go to Google Drive\n2. Find the file "awana-tracker-data.json"\n3. Right-click → Share\n4. Add team members\' emails with "Editor" access');
+    }).catch(err => {
+        // Fallback if clipboard API fails
+        prompt('Copy this File ID and share it with your team:\n\nIMPORTANT: Also share the file in Google Drive with Editor access!', fileId);
+    });
 }
 
 async function testGoogleDriveConnection() {
