@@ -1,5 +1,5 @@
 // Service Worker for offline functionality
-const CACHE_NAME = 'awana-tracker-v6';
+const CACHE_NAME = 'awana-tracker-v7';
 const urlsToCache = [
   './',
   './index.html',
@@ -71,6 +71,14 @@ self.addEventListener('activate', event => {
       return self.clients.claim();
     })
   );
+});
+
+// Handle messages from the main thread
+self.addEventListener('message', event => {
+  // Respond to messages to prevent the error
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Made with Bob
