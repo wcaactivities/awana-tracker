@@ -10,7 +10,7 @@ let appData = {
 };
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     loadData();
     initializeTabs();
     renderAll();
@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Google Drive sync UI
     if (typeof googleDriveSync !== 'undefined') {
         googleDriveSync.loadConfigIntoUI();
+        
+        // If already authenticated, initialize auto-sync
+        if (googleDriveSync.isAuthenticated) {
+            await googleDriveSync.initializeAutoSync();
+        }
     }
 });
 
@@ -63,9 +68,9 @@ function switchTab(tabName) {
 function saveData() {
     localStorage.setItem('awanaTrackerData', JSON.stringify(appData));
     
-    // If auto-sync is enabled and authenticated, sync to Google Drive
-    if (typeof googleDriveSync !== 'undefined' && googleDriveSync.autoSyncEnabled && googleDriveSync.isAuthenticated) {
-        syncToGoogleDrive().catch(err => {
+    // Auto-sync to Google Drive if authenticated
+    if (typeof googleDriveSync !== 'undefined' && googleDriveSync.isAuthenticated) {
+        googleDriveSync.uploadData(appData, true).catch(err => {
             console.error('Auto-sync failed:', err);
         });
     }
@@ -903,11 +908,25 @@ function findMatchingDate(sheetName) {
 
 // Google Drive Integration Functions
 
+function saveClubSelection() {
+    const clubSelect = document.getElementById('clubSelect');
+    const club = clubSelect.value;
+    
+    googleDriveSync.saveConfig({ club: club });
+    
+    // Update the title to show current club
+    const clubName = club === 'tnt' ? 'T&T' : 'Sparks';
+    document.querySelector('h1').textContent = `${clubName} Club Tracker`;
+    
+    console.log(`Club changed to: ${clubName}`);
+}
+
 function saveGoogleDriveConfig() {
     const email = document.getElementById('googleEmail').value.trim();
     const password = document.getElementById('googlePassword').value.trim();
     const folderName = document.getElementById('folderName').value.trim();
     const sharedFileId = document.getElementById('sharedFileId').value.trim();
+    const club = document.getElementById('clubSelect').value;
 
     if (!email || !password || !folderName) {
         alert('Please fill in all fields (Email, Password, and Folder Name)');
@@ -925,15 +944,18 @@ function saveGoogleDriveConfig() {
         email: email,
         password: password,
         folderName: folderName,
-        sharedFileId: sharedFileId
+        sharedFileId: sharedFileId,
+        club: club
     });
 
     googleDriveSync.updateSyncStatus('Configuration saved', null);
     
+    const clubName = club === 'tnt' ? 'T&T' : 'Sparks';
+    
     if (sharedFileId) {
-        alert('Google Drive configuration saved successfully!\n\nYou are now using a shared file for multi-user collaboration.\nClick "Load from Drive" to get the latest shared data.');
+        alert(`Google Drive configuration saved successfully!\n\nClub: ${clubName}\nYou are now using a shared file for multi-user collaboration.\nClick "Load from Drive" to get the latest shared data.`);
     } else {
-        alert('Google Drive configuration saved successfully!\n\nNote: You need to set up OAuth 2.0 authentication to enable syncing.\nSee the documentation for instructions.');
+        alert(`Google Drive configuration saved successfully!\n\nClub: ${clubName}\nNote: You need to set up OAuth 2.0 authentication to enable syncing.\nSee the documentation for instructions.`);
     }
 }
 
@@ -961,8 +983,11 @@ async function testGoogleDriveConnection() {
         const success = await googleDriveSync.authenticate();
         
         if (success) {
-            alert('Successfully connected to Google Drive!\n\nYou can now use Sync to Drive and Load from Drive features.');
+            alert('Successfully connected to Google Drive!\n\nAuto-sync is now enabled. Your changes will be automatically saved and you\'ll receive updates from other users every 30 seconds.');
             googleDriveSync.updateSyncStatus('Connected', new Date().toISOString());
+            
+            // Initialize auto-sync
+            await googleDriveSync.initializeAutoSync();
         }
         
     } catch (error) {

@@ -10,6 +10,9 @@ class GoogleDriveSync {
         this.fileId = null;
         this.autoSyncEnabled = false;
         this.autoSyncInterval = null;
+        this.pollingInterval = null;
+        this.isSyncing = false;
+        this.lastKnownModifiedTime = null;
     }
 
     // Load configuration from localStorage
@@ -23,8 +26,11 @@ class GoogleDriveSync {
             password: '',
             folderName: 'Awana-Tracker-Data',
             sharedFileId: '',
+            club: 'sparks', // 'sparks' or 'tnt'
             lastSync: null,
-            autoSync: false
+            autoSync: false,
+            autoSyncInterval: 30, // seconds
+            lastModified: null
         };
     }
 
@@ -32,6 +38,28 @@ class GoogleDriveSync {
     saveConfig(config) {
         this.config = { ...this.config, ...config };
         localStorage.setItem('googleDriveConfig', JSON.stringify(this.config));
+    }
+
+    // Get filename based on club selection
+    getFileName() {
+        const club = this.config.club || 'sparks';
+        return club === 'tnt' ? 'awana-tnt-data.json' : 'awana-sparks-data.json';
+    }
+
+    // Get file ID based on club (for shared file approach)
+    getSharedFileId() {
+        const club = this.config.club || 'sparks';
+        return club === 'tnt' ? this.config.sharedFileIdTnT : this.config.sharedFileIdSparks;
+    }
+
+    // Save club-specific shared file ID
+    saveSharedFileId(fileId) {
+        const club = this.config.club || 'sparks';
+        if (club === 'tnt') {
+            this.saveConfig({ sharedFileIdTnT: fileId });
+        } else {
+            this.saveConfig({ sharedFileIdSparks: fileId });
+        }
     }
 
     // Update sync status in UI
@@ -197,31 +225,51 @@ class GoogleDriveSync {
     }
 
     // Upload data to Google Drive
-    async uploadData(data) {
+    async uploadData(data, silent = false) {
         if (!this.isAuthenticated) {
             throw new Error('Not authenticated with Google Drive');
         }
 
+        if (this.isSyncing) {
+            console.log('Sync already in progress, skipping...');
+            return;
+        }
+
+        this.isSyncing = true;
+
         try {
-            const fileName = 'awana-tracker-data.json';
+            const fileName = this.getFileName();
             const fileContent = JSON.stringify(data, null, 2);
 
+            if (!silent) {
+                this.updateSyncStatus('Syncing...', null);
+            }
+
             // If shared file ID is provided, use it directly
-            if (this.config.sharedFileId) {
-                this.fileId = this.config.sharedFileId;
+            const sharedFileId = this.getSharedFileId();
+            if (sharedFileId) {
+                this.fileId = sharedFileId;
                 
                 // Update the shared file
                 const response = await this.makeApiCall(
                     'PATCH',
-                    `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`,
+                    `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media&fields=id,modifiedTime`,
                     null,
                     fileContent,
                     'application/json'
                 );
 
+                // Store the modified time
+                this.lastKnownModifiedTime = response.modifiedTime;
+                
                 const now = new Date().toISOString();
-                this.saveConfig({ lastSync: now });
-                this.updateSyncStatus('Synced to shared file', now);
+                this.saveConfig({ lastSync: now, lastModified: response.modifiedTime });
+                
+                if (!silent) {
+                    this.updateSyncStatus('Synced to shared file', now);
+                }
+                
+                this.isSyncing = false;
                 return response;
             }
 
@@ -244,11 +292,14 @@ class GoogleDriveSync {
                 this.fileId = searchResponse.files[0].id;
                 response = await this.makeApiCall(
                     'PATCH',
-                    `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`,
+                    `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media&fields=id,modifiedTime`,
                     null,
                     fileContent,
                     'application/json'
                 );
+                
+                // Store the modified time
+                this.lastKnownModifiedTime = response.modifiedTime;
             } else {
                 // Create new file using multipart upload
                 const boundary = '-------314159265358979323846';
@@ -279,32 +330,65 @@ class GoogleDriveSync {
                 );
                 
                 this.fileId = response.id;
+                this.lastKnownModifiedTime = response.modifiedTime;
+                
+                // Save the file ID for this club
+                this.saveSharedFileId(response.id);
             }
 
             const now = new Date().toISOString();
-            this.saveConfig({ lastSync: now });
-            this.updateSyncStatus('Synced successfully', now);
+            this.saveConfig({ lastSync: now, lastModified: this.lastKnownModifiedTime });
+            
+            if (!silent) {
+                this.updateSyncStatus('Synced successfully', now);
+            }
 
+            this.isSyncing = false;
             return response;
 
         } catch (error) {
             console.error('Error uploading data:', error);
-            this.updateSyncStatus('Sync failed', null);
+            this.isSyncing = false;
+            if (!silent) {
+                this.updateSyncStatus('Sync failed', null);
+            }
             throw error;
         }
     }
 
     // Download data from Google Drive
-    async downloadData() {
+    async downloadData(silent = false) {
         if (!this.isAuthenticated) {
             throw new Error('Not authenticated with Google Drive');
         }
 
         try {
+            if (!silent) {
+                this.updateSyncStatus('Loading...', null);
+            }
+
             // If shared file ID is provided, use it directly
-            if (this.config.sharedFileId) {
-                this.fileId = this.config.sharedFileId;
+            const sharedFileId = this.getSharedFileId();
+            if (sharedFileId) {
+                this.fileId = sharedFileId;
                 
+                // Get file metadata first to check modified time
+                const metadataResponse = await fetch(
+                    `https://www.googleapis.com/drive/v3/files/${this.fileId}?fields=id,modifiedTime`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`
+                        }
+                    }
+                );
+
+                if (!metadataResponse.ok) {
+                    throw new Error('Failed to get file metadata');
+                }
+
+                const metadata = await metadataResponse.json();
+                this.lastKnownModifiedTime = metadata.modifiedTime;
+
                 // Download the shared file - use raw fetch for media download
                 const response = await fetch(
                     `https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`,
@@ -323,15 +407,19 @@ class GoogleDriveSync {
                 const content = JSON.parse(text);
 
                 const now = new Date().toISOString();
-                this.saveConfig({ lastSync: now });
-                this.updateSyncStatus('Loaded from shared file', now);
+                this.saveConfig({ lastSync: now, lastModified: metadata.modifiedTime });
+                
+                if (!silent) {
+                    this.updateSyncStatus('Loaded from shared file', now);
+                }
+                
                 return content;
             }
 
             // Otherwise, use folder-based approach (original behavior)
             await this.findOrCreateFolder();
 
-            const fileName = 'awana-tracker-data.json';
+            const fileName = this.getFileName();
 
             // Find the file
             const searchResponse = await this.makeApiCall(
@@ -348,6 +436,23 @@ class GoogleDriveSync {
             }
 
             this.fileId = searchResponse.files[0].id;
+
+            // Get file metadata first
+            const metadataResponse = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${this.fileId}?fields=id,modifiedTime`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                }
+            );
+
+            if (!metadataResponse.ok) {
+                throw new Error('Failed to get file metadata');
+            }
+
+            const metadata = await metadataResponse.json();
+            this.lastKnownModifiedTime = metadata.modifiedTime;
 
             // Download file content - use raw fetch for media download
             const response = await fetch(
@@ -367,14 +472,19 @@ class GoogleDriveSync {
             const content = JSON.parse(text);
 
             const now = new Date().toISOString();
-            this.saveConfig({ lastSync: now });
-            this.updateSyncStatus('Loaded successfully', now);
+            this.saveConfig({ lastSync: now, lastModified: metadata.modifiedTime });
+            
+            if (!silent) {
+                this.updateSyncStatus('Loaded successfully', now);
+            }
 
             return content;
 
         } catch (error) {
             console.error('Error downloading data:', error);
-            this.updateSyncStatus('Load failed', null);
+            if (!silent) {
+                this.updateSyncStatus('Load failed', null);
+            }
             throw error;
         }
     }
@@ -455,11 +565,18 @@ class GoogleDriveSync {
         const passwordInput = document.getElementById('googlePassword');
         const folderInput = document.getElementById('folderName');
         const sharedFileIdInput = document.getElementById('sharedFileId');
+        const clubSelect = document.getElementById('clubSelect');
 
         if (emailInput) emailInput.value = this.config.email || '';
         if (passwordInput) passwordInput.value = this.config.password || '';
         if (folderInput) folderInput.value = this.config.folderName || 'Awana-Tracker-Data';
         if (sharedFileIdInput) sharedFileIdInput.value = this.config.sharedFileId || '';
+        if (clubSelect) clubSelect.value = this.config.club || 'sparks';
+
+        // Update page title based on club
+        const clubName = (this.config.club === 'tnt') ? 'T&T' : 'Sparks';
+        const h1 = document.querySelector('h1');
+        if (h1) h1.textContent = `${clubName} Club Tracker`;
 
         if (this.config.lastSync) {
             this.updateSyncStatus('Configured', this.config.lastSync);
@@ -473,10 +590,154 @@ class GoogleDriveSync {
         if (this.fileId) {
             return this.fileId;
         }
-        if (this.config.sharedFileId) {
-            return this.config.sharedFileId;
+        const sharedFileId = this.getSharedFileId();
+        if (sharedFileId) {
+            return sharedFileId;
         }
         return null;
+    }
+
+    // Check if file has been modified by others
+    async checkForUpdates() {
+        if (!this.isAuthenticated || !this.fileId) {
+            return false;
+        }
+
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${this.fileId}?fields=modifiedTime`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                return false;
+            }
+
+            const metadata = await response.json();
+            const serverModifiedTime = metadata.modifiedTime;
+            const localModifiedTime = this.config.lastModified || this.lastKnownModifiedTime;
+
+            // If server version is newer, there are updates
+            if (localModifiedTime && serverModifiedTime > localModifiedTime) {
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Error checking for updates:', error);
+            return false;
+        }
+    }
+
+    // Start polling for updates
+    startPolling() {
+        if (this.pollingInterval) {
+            return; // Already polling
+        }
+
+        const intervalSeconds = this.config.autoSyncInterval || 30;
+        
+        this.pollingInterval = setInterval(async () => {
+            if (!this.isAuthenticated || this.isSyncing) {
+                return;
+            }
+
+            try {
+                const hasUpdates = await this.checkForUpdates();
+                
+                if (hasUpdates) {
+                    console.log('Updates detected from other users');
+                    this.updateSyncStatus('Updates available...', null);
+                    
+                    // Auto-load the updates
+                    const data = await this.downloadData(true);
+                    
+                    // Update app data without confirmation
+                    if (typeof appData !== 'undefined' && typeof renderAll === 'function') {
+                        appData = data;
+                        localStorage.setItem('awanaTrackerData', JSON.stringify(appData));
+                        renderAll();
+                        this.updateSyncStatus('Auto-updated', new Date().toISOString());
+                        
+                        // Show notification
+                        this.showNotification('Data updated from Google Drive');
+                    }
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+            }
+        }, intervalSeconds * 1000);
+
+        console.log(`Polling started (every ${intervalSeconds} seconds)`);
+    }
+
+    // Stop polling
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+            console.log('Polling stopped');
+        }
+    }
+
+    // Show notification to user
+    showNotification(message) {
+        // Create a simple notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Initialize auto-sync on startup
+    async initializeAutoSync() {
+        if (!this.isAuthenticated) {
+            return;
+        }
+
+        try {
+            // Load data from Drive on startup
+            const data = await this.downloadData(true);
+            
+            if (typeof appData !== 'undefined' && typeof renderAll === 'function') {
+                appData = data;
+                localStorage.setItem('awanaTrackerData', JSON.stringify(appData));
+                renderAll();
+                this.updateSyncStatus('Loaded from Drive', new Date().toISOString());
+            }
+
+            // Start polling for updates
+            this.startPolling();
+            
+        } catch (error) {
+            console.error('Auto-sync initialization error:', error);
+            // If file doesn't exist yet, that's okay
+            if (error.message.includes('No data file found')) {
+                console.log('No existing file found, will create on first sync');
+                this.startPolling();
+            }
+        }
     }
 }
 
