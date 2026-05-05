@@ -75,9 +75,13 @@ self.addEventListener('activate', event => {
 
 // Handle messages from the main thread
 self.addEventListener('message', event => {
-  // Respond to messages to prevent the error
+  // Always respond to messages to prevent channel closure errors
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+    event.ports[0]?.postMessage({ success: true });
+  } else if (event.ports && event.ports[0]) {
+    // Respond to any other messages to prevent errors
+    event.ports[0].postMessage({ received: true });
   }
 });
 
