@@ -1,0 +1,86 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-05-05T18:05:00Z",
+    "tools": [
+      {
+        "vendor": "Bob AI Assistant",
+        "name": "Manual SBOM Generation",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "awana-tracker@1.0.0",
+      "name": "Awana Tracker",
+      "version": "1.0.0",
+      "description": "A Progressive Web App for tracking Awana club attendance and progress with Google Drive synchronization",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "google-identity-services@latest",
+      "name": "Google Identity Services",
+      "version": "latest",
+      "description": "Google's OAuth 2.0 authentication library",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://accounts.google.com/gsi/client"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Google Terms of Service"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "google-drive-api@v3",
+      "name": "Google Drive API",
+      "version": "v3",
+      "description": "Google Drive REST API for file operations",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.googleapis.com/drive/v3"
+        },
+        {
+          "type": "documentation",
+          "url": "https://developers.google.com/drive/api/v3/reference"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Google APIs Terms of Service"
+          }
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "awana-tracker@1.0.0",
+      "dependsOn": [
+        "google-identity-services@latest",
+        "google-drive-api@v3"
+      ]
+    }
+  ]
+}

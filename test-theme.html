@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Theme Test</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="theme-sparks">
+    <div class="container">
+        <header>
+            <h1>Test - Should be RED</h1>
+        </header>
+    </div>
+    <br>
+    <button onclick="switchToTNT()">Switch to T&T (Green)</button>
+    <button onclick="switchToSparks()">Switch to Sparks (Red)</button>
+    
+    <script>
+        function switchToTNT() {
+            document.body.classList.remove('theme-sparks');
+            document.body.classList.add('theme-tnt');
+            document.querySelector('h1').textContent = 'Test - Should be GREEN';
+            console.log('Switched to T&T, body classes:', document.body.className);
+        }
+        
+        function switchToSparks() {
+            document.body.classList.remove('theme-tnt');
+            document.body.classList.add('theme-sparks');
+            document.querySelector('h1').textContent = 'Test - Should be RED';
+            console.log('Switched to Sparks, body classes:', document.body.className);
+        }
+    </script>
+</body>
+</html>

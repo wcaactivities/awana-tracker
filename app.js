@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             await googleDriveSync.initializeAutoSync();
         }
     }
+    
+    // Initialize club logo and title based on saved selection
+    initializeClubDisplay();
 });
 
 // Tab functionality
@@ -912,13 +915,113 @@ function saveClubSelection() {
     const clubSelect = document.getElementById('clubSelect');
     const club = clubSelect.value;
     
-    googleDriveSync.saveConfig({ club: club });
+    console.log('saveClubSelection called with club:', club);
     
-    // Update the title to show current club
-    const clubName = club === 'tnt' ? 'T&T' : 'Sparks';
-    document.querySelector('h1').textContent = `${clubName} Club Tracker`;
+    // Save to Google Drive config
+    if (typeof googleDriveSync !== 'undefined') {
+        googleDriveSync.saveConfig({ club: club });
+    }
     
-    console.log(`Club changed to: ${clubName}`);
+    // Update the logo, title, and theme immediately
+    updateClubDisplay(club);
+    
+    console.log(`Club changed to: ${club}`);
+}
+
+function initializeClubDisplay() {
+    // Get saved club selection from Google Drive config
+    const savedClub = googleDriveSync?.config?.club || 'sparks';
+    updateClubDisplay(savedClub);
+}
+
+function updateClubDisplay(club) {
+    console.log('updateClubDisplay called with club:', club);
+    
+    const clubLogo = document.getElementById('clubLogo');
+    const clubTitle = document.querySelector('h1');
+    const body = document.body;
+    const header = document.querySelector('header');
+    
+    console.log('Elements found:', {
+        clubLogo: clubLogo ? 'yes' : 'no',
+        clubTitle: clubTitle ? 'yes' : 'no',
+        body: body ? 'yes' : 'no',
+        header: header ? 'yes' : 'no'
+    });
+    
+    if (club === 'tnt') {
+        // T&T theme - green
+        console.log('Applying T&T theme');
+        
+        // Update logo
+        if (clubLogo) {
+            clubLogo.src = 'tnt-logo.png';
+            clubLogo.alt = 'Awana T&T';
+            console.log('Logo updated to:', clubLogo.src);
+        }
+        
+        // Update title
+        if (clubTitle) {
+            clubTitle.textContent = 'T&T Club Tracker';
+        }
+        
+        // Update theme classes
+        body.classList.remove('theme-sparks');
+        body.classList.add('theme-tnt');
+        
+        // Force CSS variables update with inline styles as fallback
+        body.style.setProperty('--primary-color', '#16a34a');
+        body.style.setProperty('--primary-dark', '#15803d');
+        body.style.setProperty('--primary-light', '#22c55e');
+        
+        // Update body background directly
+        body.style.background = 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)';
+        body.style.backgroundAttachment = 'fixed';
+        
+        // Update header background directly
+        if (header) {
+            header.style.background = 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)';
+        }
+        
+        console.log('Body classes:', body.className);
+        console.log('Body background:', body.style.background);
+    } else {
+        // Sparks theme - red
+        console.log('Applying Sparks theme');
+        
+        // Update logo
+        if (clubLogo) {
+            clubLogo.src = 'sparks-logo.png';
+            clubLogo.alt = 'Awana Sparks';
+            console.log('Logo updated to:', clubLogo.src);
+        }
+        
+        // Update title
+        if (clubTitle) {
+            clubTitle.textContent = 'Sparks Club Tracker';
+        }
+        
+        // Update theme classes
+        body.classList.remove('theme-tnt');
+        body.classList.add('theme-sparks');
+        
+        // Force CSS variables update with inline styles as fallback
+        body.style.setProperty('--primary-color', '#dc2626');
+        body.style.setProperty('--primary-dark', '#991b1b');
+        body.style.setProperty('--primary-light', '#ef4444');
+        
+        // Update body background directly
+        body.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
+        body.style.backgroundAttachment = 'fixed';
+        
+        // Update header background directly
+        if (header) {
+            header.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
+        }
+        
+        console.log('Body classes:', body.className);
+        console.log('Body background:', body.style.background);
+    }
 }
 
 function saveGoogleDriveConfig() {

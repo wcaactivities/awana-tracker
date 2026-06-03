@@ -6,13 +6,21 @@
 
 🚀 TO START THE APPLICATION:
 
-   Windows Users:
-   → Double-click "Launch_Awana_Tracker.bat"
-   → OR double-click "index.html"
+   ⭐ RECOMMENDED - GUI Launcher (Enables Google Drive Sync):
+   Windows: Double-click "Launch_Awana_Tracker_GUI.bat"
+   macOS: Double-click "Awana Tracker Launcher.app"
+   Linux: Run "./Launch_Awana_Tracker_GUI.sh" from terminal
+   → Click "Start Server & Open App" button
+   → Keep launcher window open while using app
+   → See "QUICKSTART_GUI_LAUNCHER.md" for details
 
-   Mac/Linux Users:
-   → Double-click "Launch_Awana_Tracker.sh"
-   → OR double-click "index.html"
+   Basic Mode (Local Use Only):
+   → Double-click "index.html"
+   → Note: Google Drive sync won't work in this mode
+
+   Alternative Launchers:
+   Windows: "Launch_Awana_Tracker.bat" (opens in browser)
+   Mac/Linux: "Launch_Awana_Tracker.sh" (opens in browser)
 
    Chromebook Users:
    → See "CHROMEBOOK_INSTALLATION.md" for full guide

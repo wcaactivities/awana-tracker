@@ -1,0 +1,29 @@
+#!/bin/bash
+# Awana Tracker Launcher for macOS
+# This script is executed when the .app bundle is double-clicked
+
+# Get the directory where the app bundle is located
+APP_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+# Change to the parent directory (where launcher.py is)
+cd "$APP_DIR"
+
+# Find Python 3
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python &> /dev/null; then
+    PYTHON_CMD="python"
+else
+    osascript -e 'display dialog "Python is not installed. Please install Python 3 from https://www.python.org/" buttons {"OK"} default button "OK" with icon stop'
+    exit 1
+fi
+
+# Run the launcher
+$PYTHON_CMD launcher.py
+
+# If launcher exits with error, show message
+if [ $? -ne 0 ]; then
+    osascript -e 'display dialog "Failed to start Awana Tracker Launcher. Make sure Python 3 is installed." buttons {"OK"} default button "OK" with icon stop'
+fi
+
+# Made with Bob

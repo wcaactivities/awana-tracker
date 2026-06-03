@@ -21,12 +21,12 @@
     <!-- Google API Client Library (for Drive API calls) -->
     <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
-<body>
+<body class="theme-sparks">
     <div class="container">
         <header>
             <div class="header-content">
-                <img src="sparks-logo.png" alt="Awana Clubs Sparks" class="sparks-logo">
-                <h1>Club Tracker</h1>
+                <img id="clubLogo" src="sparks-logo.png" alt="Awana Clubs" class="sparks-logo">
+                <h1>Sparks Club Tracker</h1>
             </div>
         </header>
 
@@ -130,9 +130,47 @@
                     <!-- Populated by JavaScript -->
                 </div>
             </div>
+        </div>
 
-            <h2>Google Drive Sync</h2>
-            <div class="admin-section">
+        <!-- Config Tab -->
+        <div id="config" class="tab-content">
+            <h2>Configuration</h2>
+            
+            <div class="config-section">
+                <h3>Books</h3>
+                <div class="input-group">
+                    <input type="text" id="newBook" placeholder="Enter book name">
+                    <button onclick="addBook()">Add Book</button>
+                </div>
+                <div id="booksList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Sections</h3>
+                <div class="input-group">
+                    <input type="text" id="newSection" placeholder="Enter section name">
+                    <button onclick="addSection()">Add Section</button>
+                </div>
+                <div id="sectionsList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Dates</h3>
+                <div class="input-group">
+                    <input type="date" id="newDate">
+                    <button onclick="addDate()">Add Date</button>
+                </div>
+                <div id="datesList" class="items-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Google Drive Sync</h3>
                 <div class="sync-status" id="syncStatus">
                     <p><strong>Status:</strong> <span id="syncStatusText">Not configured</span></p>
                     <p><strong>Last Sync:</strong> <span id="lastSyncTime">Never</span></p>
@@ -181,44 +219,6 @@
                         <li><strong>Team Members:</strong> Paste the shared File ID, save config, then click "Load from Drive" to get the shared data</li>
                         <li><strong>Important:</strong> Admin must share the file in Google Drive (right-click → Share → add team emails with Editor access)</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Config Tab -->
-        <div id="config" class="tab-content">
-            <h2>Configuration</h2>
-            
-            <div class="config-section">
-                <h3>Books</h3>
-                <div class="input-group">
-                    <input type="text" id="newBook" placeholder="Enter book name">
-                    <button onclick="addBook()">Add Book</button>
-                </div>
-                <div id="booksList" class="items-list">
-                    <!-- Populated by JavaScript -->
-                </div>
-            </div>
-
-            <div class="config-section">
-                <h3>Sections</h3>
-                <div class="input-group">
-                    <input type="text" id="newSection" placeholder="Enter section name">
-                    <button onclick="addSection()">Add Section</button>
-                </div>
-                <div id="sectionsList" class="items-list">
-                    <!-- Populated by JavaScript -->
-                </div>
-            </div>
-
-            <div class="config-section">
-                <h3>Dates</h3>
-                <div class="input-group">
-                    <input type="date" id="newDate">
-                    <button onclick="addDate()">Add Date</button>
-                </div>
-                <div id="datesList" class="items-list">
-                    <!-- Populated by JavaScript -->
                 </div>
             </div>
         </div>

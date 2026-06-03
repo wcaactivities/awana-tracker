@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create T&T Logo</title>
+</head>
+<body>
+    <canvas id="canvas" width="412" height="122"></canvas>
+    <br>
+    <button onclick="downloadLogo()">Download T&T Logo</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Fill background with green gradient
+        const gradient = ctx.createLinearGradient(0, 0, 412, 122);
+        gradient.addColorStop(0, '#16a34a');  // Green-600
+        gradient.addColorStop(1, '#15803d');  // Green-700
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 412, 122);
+        
+        // Draw "T&T" text
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 60px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('T&T', 206, 50);
+        
+        // Draw subtitle
+        ctx.font = '20px Arial, sans-serif';
+        ctx.fillText('Truth & Training', 206, 95);
+        
+        function downloadLogo() {
+            const link = document.createElement('a');
+            link.download = 'tnt-logo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Auto-download on page load
+        window.onload = function() {
+            setTimeout(downloadLogo, 500);
+        };
+    </script>
+</body>
+</html>

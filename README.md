@@ -1,6 +1,6 @@
-# Awana Sparks Club Tracker
+# Awana Club Tracker
 
-A web application for tracking the progress of Awana clubbers in Sparks club with Excel import/export capabilities.
+A web application for tracking the progress of Awana clubbers (Sparks and T&T) with Excel import/export capabilities.
 
 ## Features
 
@@ -23,17 +23,17 @@ A web application for tracking the progress of Awana clubbers in Sparks club wit
    - Track spending across 4 customizable date columns
    - Balance automatically calculated from earned and spent coupons
 
-4. **Admin Tab** - Manage clubbers and Google Drive sync:
+4. **Admin Tab** - Manage clubbers:
    - Add new clubbers
    - Edit clubber names
    - Delete clubbers
-   - Configure Google Drive synchronization
-   - Multi-user collaboration support
 
-5. **Config Tab** - Configure lists:
+5. **Config Tab** - Configure lists and Google Drive sync:
    - Books list (add/edit/delete)
    - Sections list (add/edit/delete)
    - Dates list (add/delete)
+   - Configure Google Drive synchronization
+   - Multi-user collaboration support
 
 ## How to Use
 
@@ -62,9 +62,49 @@ A web application for tracking the progress of Awana clubbers in Sparks club wit
    - Coupons shows total earned across all dates
    - Book and Section show values from the most recent date
 
-## Installation
+## Installation & Quick Start
+
+### Option 1: GUI Launcher (Recommended for Google Drive Sync)
+
+**For Windows:**
+1. Double-click `Launch_Awana_Tracker_GUI.bat`
+2. Click "🚀 Start Server & Open App" button
+3. The app will open automatically in your browser
+4. Keep the launcher window open while using the app
+
+**For macOS:**
+1. Double-click `Awana Tracker Launcher.app`
+2. Click "🚀 Start Server & Open App" button
+3. The app will open automatically in your browser
+4. Keep the launcher window open while using the app
+
+**For Linux:**
+1. Run `./Launch_Awana_Tracker_GUI.sh` from terminal
+2. Click "🚀 Start Server & Open App" button
+3. The app will open automatically in your browser
+4. Keep the launcher window open while using the app
+
+**GUI Launcher Features:**
+- ✅ One-click server start/stop
+- ✅ Automatic browser opening
+- ✅ No terminal window needed
+- ✅ Server status monitoring
+- ✅ Enables Google Drive sync features
+
+### Option 2: Direct File Access (Basic Features Only)
 
 Simply open `index.html` in a web browser. No server or installation required.
+
+**Note:** Google Drive sync requires a web server (use Option 1 or Option 3).
+
+### Option 3: Manual Server Start (Advanced)
+
+If you prefer using the terminal:
+```bash
+cd awana-tracker
+python -m http.server 8000
+```
+Then open `http://localhost:8000` in your browser.
 
 ## Excel Import/Export
 
